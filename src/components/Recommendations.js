@@ -16,6 +16,7 @@ const Recommendations = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
+    const [mlSearchResults, setMlSearchResults] = useState([]); // New state for ML search results
 
     useEffect(() => {
         const fetchRecommendedMovies = async () => {
@@ -82,8 +83,37 @@ const Recommendations = () => {
         }
     }, 300);
 
+    // New debounced search for ML recommendations
+    const debouncedMLSearch = debounce(async (query) => {
+        if (!query) {
+            setMlSearchResults([]);
+            setSearchLoading(false);
+            return;
+        }
+
+        setSearchLoading(true);
+        try {
+            const response = await api.get(`/api/movies/search-with-ml?query=${query}`, {
+                headers: {
+                    Authorization: `Bearer ${user.token}`,
+                },
+            });
+
+            if (response.status === 200) {
+                setMlSearchResults(response.data.results || response.data);
+            } else {
+                setError('Failed to search for movies with ML.');
+            }
+        } catch (error) {
+            setError(error.response?.data?.message || error.message || 'Failed to search for movies with ML.');
+        } finally {
+            setSearchLoading(false);
+        }
+    }, 300);
+
     useEffect(() => {
         debouncedSearch(searchQuery);
+        debouncedMLSearch(searchQuery); // Trigger ML search
     }, [searchQuery]);
 
     if (loading) {
@@ -98,18 +128,20 @@ const Recommendations = () => {
         return <div className="text-red-500">{error}</div>;
     }
 
-    const moviesToDisplay = searchQuery ? searchResults : movies;
+    const moviesToDisplay = searchQuery ? searchResults.concat(mlSearchResults) : movies; // Combine regular and ML search results
     const recommendedMovies = moviesToDisplay.slice(0, 8); // First 8 movies for 2 rows
 
     // Group movies by genre
     const groupMoviesByGenre = (movies) => {
         return movies.reduce((acc, movie) => {
-            movie.genre_ids.forEach((genreId) => {
-                if (!acc[genreId]) {
-                    acc[genreId] = [];
-                }
-                acc[genreId].push(movie);
-            });
+            if (Array.isArray(movie.genre_ids)) { // Check if genre_ids is an array
+                movie.genre_ids.forEach((genreId) => {
+                    if (!acc[genreId]) {
+                        acc[genreId] = [];
+                    }
+                    acc[genreId].push(movie);
+                });
+            }
             return acc;
         }, {});
     };
@@ -136,12 +168,14 @@ const Recommendations = () => {
         37: 'Western'
     };
 
-    const otherMoviesGroupedByGenre = groupMoviesByGenre(moviesToDisplay.slice(8));
+    // Filter movies to exclude those without genre_ids
+    const moviesWithGenres = moviesToDisplay.filter(movie => Array.isArray(movie.genre_ids));
+    const otherMoviesGroupedByGenre = groupMoviesByGenre(moviesWithGenres.slice(8));
 
     return (
         <div className="min-h-screen flex flex-col items-center bg-black text-white p-4 pt-20">  {/* Added pt-20 */}
             <h2 className="text-3xl font-extrabold text-red-600 mb-6">Recommended Movies</h2>
-            
+
             <div className="mb-6 w-full max-w-md relative">
                 <input
                     type="text"
@@ -178,3 +212,4 @@ const Recommendations = () => {
 };
 
 export default Recommendations;
+

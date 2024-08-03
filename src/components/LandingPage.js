@@ -20,7 +20,7 @@ const LandingPage = () => {
         </Link>
         <div className="absolute bottom-10 left-0 right-0 text-white text-center animate__animated animate__fadeInUp animate__delay-2s">
           <FaPlay size={24} className="mx-auto mb-2 animate-bounce" />
-          <p className="text-xs sm:text-sm md:text-md">Experience seamless streaming with our recommendation engine</p>
+          <p className="text-xs sm:text-sm md:text-md">Experience seamless streaming with Flicksasa recommendation engine</p>
         </div>
       </div>
     </div>

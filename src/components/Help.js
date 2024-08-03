@@ -3,8 +3,8 @@ import { FaPlus, FaMinus } from 'react-icons/fa';
 
 const faqData = [
     {
-        question: "What is Movie Recommendation System?",
-        answer: "Our Movie Recommendation System helps you discover movies and TV shows based on your viewing history and preferences."
+        question: "What is Flicksasa?",
+        answer: "Flicksasa helps you discover movies and TV shows based on your viewing history and preferences."
     },
     {
         question: "How much does it cost?",
